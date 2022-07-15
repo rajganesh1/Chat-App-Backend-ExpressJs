@@ -16,9 +16,11 @@
     "ejs": "^3.1.8",
     "express": "^4.18.1",
     "express-async-handler": "^1.2.0",
+    "express-validator": "^6.14.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.4.4",
     "nodemon": "^2.0.19",
+    "pusher": "^5.1.1-beta",
     "randombytes": "^2.1.0",
     "socket.io": "^4.5.1",
     "uuid": "^8.3.2"

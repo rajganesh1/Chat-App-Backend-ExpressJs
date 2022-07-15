@@ -2,18 +2,26 @@ const mongoose = require('mongoose');
 
 const messageModel = mongoose.Schema(
     {
+        id: {
+            type: String,
+            required: true,
+        },
         sender: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            type: String,
+            required: true,
+        },
+        receiver: {
+            type: String,
+            required: true,
         },
         content: {
             type: String,
-            trim: true,
+            required: true,
         },
-        chat: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Chat",
-        },
+        sent_at: {
+            type: Date,
+            default: Date.now,
+        }
     },
     {
         timeStamp: true,

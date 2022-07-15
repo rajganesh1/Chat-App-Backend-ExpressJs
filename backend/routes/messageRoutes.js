@@ -1,9 +1,13 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth.service');
-const { sendMessage , allMessages} = require('../controllers/messageControllers');
+const { sendMessage , getallMessages , deleteMessage} = require('../controllers/messageControllers');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 
-router.route('/').post(authenticateToken, sendMessage);
-router.route('/:chatId').get(authenticateToken, allMessages);
+router.get('/:receiver_id', authenticateToken, getallMessages);
+
+router.post('/send',authenticateToken, sendMessage );
+
+router.post('/delete',authenticateToken, deleteMessage ); 
 
 module.exports = router;
