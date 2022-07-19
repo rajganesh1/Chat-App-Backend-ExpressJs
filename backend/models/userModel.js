@@ -23,7 +23,10 @@ const userModel = mongoose.Schema(
             type: Date,
             default: new Date().toLocaleString('en-US', { timeZone: 'IST' }) + ' (IST)',
         },
-    },
+        contacts: {
+            type: Array,
+        }
+    },//pending req...accepted req
     {
         timeStamps: true,
     }

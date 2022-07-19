@@ -16,15 +16,16 @@ const { text, rec_id } = req.body;
 
   try {
     const uuidv4=uuid.v4();
-    req.body.id=uuidv4;
-    var newMessage = {
+    req.body.id = uuidv4;
+    console.log(req.user.id);
+    var newMessage = ({
         id: req.body.id,
-        sender: req.user.id,
-        receiver: req.body.rec_id,
+        sender: JSON.stringify(req.user.id),
+        receiver:(req.body.rec_id),
         content: req.body.text,
-    };
+    });
     await Message.create(newMessage);
-    //console.log(req.user.id, req.body.rec_id);
+    console.log(req.user.id, req.body.rec_id);
     
     const Pusher = require("pusher");
 
@@ -49,9 +50,10 @@ const { text, rec_id } = req.body;
 
 const getallMessages = asyncHandler(async (req, res) => {
   try {
-    const messages = await Message.find({$or: [{ receiver: req.params.receiver_id, receiver: req.user.id }]});
+    const messages = await Message.find({ $or: [{ receiver: JSON.stringify(req.params.receiver_id) }, {sender: JSON.stringify(req.user.id) }]});
     res.send(messages);
   } catch (err) {
+    console.log(err.message);
     return res.status(400).send(err.message);
   }
 });

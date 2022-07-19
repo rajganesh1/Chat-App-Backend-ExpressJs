@@ -13,8 +13,7 @@ const registerUser = asyncHandler(async (req,res) => {
     const today = new Date().toLocaleString('en-US', { timeZone: 'IST' });
 
     if (!name || !email || !req.body.password) {
-        res.sendStatus(400);
-        throw new Error("Please Enter all the Fields");
+        return res.status(403).json({ errors: "Please Enter all the fields" });
     }
 
     if (req.body.password) {
@@ -23,8 +22,7 @@ const registerUser = asyncHandler(async (req,res) => {
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-        res.status(400).send("User already Exists");
-        throw new Error("User already Exists");
+        return res.status(403).json({ errors: "User already exists..!!" });
     }
 
     req.body.createdAt = today;
@@ -32,18 +30,18 @@ const registerUser = asyncHandler(async (req,res) => {
     const user = new User((req.body));
     await user.save();
 
+    const token = generateToken({ email: user.email, id: user.id });
+    res.cookie("access_token", token);
+
     if (user) {
         res.status(201).json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            time: today+' (IST)',
-            token: generateToken(user._id),
+            user: exposeUserDetails(user),
+            time: today + ' (IST)',
+            token: token
         });
     }
     else {
-        res.sendStatus(400);
-        throw new Error('Failed to create user');
+        return res.status(403).json({ errors: "Failed to create user" });
     }
 
 });
@@ -54,34 +52,59 @@ const authUser = asyncHandler(async (req, res) => {
     const password = req.body.password;
     const today = new Date().toLocaleString('en-US', { timeZone: 'IST' });
     const user = await User.findOne({ email: email });
+    if (user.email == undefined || user.email == null) {
+        return res.status(403).json({ errors: "Incorrect credentials" });
+    }
     const isvalid = await bcrypt.compare(password, user.password);
     if (user && (isvalid)) {
+        const token = generateToken({ id: user.id });
+        res.cookie("access_token", token);
         res.json({
-            id: user.id,
-            name: user.name,
-            email: user.email,
+            user: exposeUserDetails(user),
             time: today + '(IST)',
-            token: generateToken(user.id),
+            token: token
         });
     }
     else {
-        res.sendStatus(401);
-        throw new Error('Invalid email or password');
+        return res.status(403).json({ errors: "Incorrect credentials" });
     }
 });
 
-const allUsers = asyncHandler(async (req, res) => {
-    const keyword = req.query.search ? {
-        $or: [
-            { name: { $regex: req.query.search, $options: 'i' } },
-            { email: { $regex: req.query.search, $options: 'i' } }
-        ],
-    } : {};
-    const users = await User.find(keyword).find({ id: { $ne: req.user.id } });
-    res.send(users);
+function exposeUserDetails(user) {
+  return {
+    email: user.email,
+    name: user.name,
+    //contacts: user.contacts,
+    id: user.id,
+  };
+}
+
+const contacts = asyncHandler(async (req, res) => {
+    try {
+        console.log(req.user.id);
+        const user = await User.findOne({ id: (req.params.id) });//error here
+        console.log(user, req.user.id);
+        
+        if (!user) {
+            return res.status(403).send("User does not exists");
+        }
+        const contacts = await User.find({ "id":{ "$in": user.contacts } });
+        const contactDetail = contacts.map(contact => exposeUserDetails(contact));
+        res.send(contactDetail);
+
+    } catch (err) {
+        console.log(err.message);
+        return res.status(404).json({ errors: "An error occured"});
+    }
 })
 
-module.exports = { registerUser, authUser ,allUsers };
+function logout(req, res, next) {
+  res.send({
+    message: "User Logged out"
+  })
+}
+
+module.exports = { registerUser, authUser ,contacts ,logout};
 
 //$2b$10$LkHr/FXMLBhKcT7SF5RVz.tcJioNthWoPT7lYveU4vo2klGu9CwQq
 //$2b$10$LkHr/FXMLBhKcT7SF5RVz.tcJioNthWoPT7lYveU4vo2klGu9CwQq
